@@ -3,9 +3,6 @@ pragma solidity ^0.8.9;
 
 import "./POGM.sol";
 import "./POGMRegistry.sol";
-import "@openzeppelin/contracts/utils/Context.sol";
-import "@openzeppelin/contracts/governance/Governor.sol";
-
 /// @title    POGM (Proof Of Github Membership) token Factory contract
 /// @author   GitGate - developed by @francescocirulli
 
@@ -17,6 +14,7 @@ contract POGMFactory {
     mapping(uint256 => address) public POGMs;
 
     event newPOGMCollection(address indexed POGMAddress, uint256 indexed tokenizedRepo);
+    
     error Already_Created(address POGMAddress);
     error Not_Existing_Repo();
 
