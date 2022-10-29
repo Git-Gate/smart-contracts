@@ -30,8 +30,6 @@ contract POGMRegistry is AccessControl {
     mapping(uint256 => RepositoryRequirements) public database;
 
     bytes32 public NFT_FACTORY_ROLE = keccak256("NFT_FACTORY_ROLE");
-    mapping(uint256 => address) public operator;
-
     uint256 public constant REPOSITORY_OWNER = 0;
     uint256 public constant BLACKLIST_ADMINISTRATOR = 1;
     uint256 public constant REQUIREMENTS_ADMINISTRATOR = 2;
@@ -55,26 +53,15 @@ contract POGMRegistry is AccessControl {
     }
 
     modifier onlyRepositoryRole(uint256 _githubRepoId, uint256 _role) {
-        if (database[_githubRepoId].operators[_role] != _msgSender())
-            revert AccessDenied(_githubRepoId, _msgSender(), _role);
+        if (database[_githubRepoId].operators[_role] != msg.sender)
+            revert AccessDenied(_githubRepoId, msg.sender, _role);
         _;
     }
 
     constructor() {
-        _grantRole(DEFAULT_ADMIN_ROLE, _msgSender());
+        _grantRole(DEFAULT_ADMIN_ROLE, msg.sender);
     }
 
-    // TODO check if Metamask adds "\x19Ethereum Signed Message:\n32" or not in the message
-    function _recoverSigner(bytes32 hash, bytes memory signature)
-        private
-        pure
-        returns (address)
-    {
-        bytes32 messageDigest = keccak256(
-            abi.encodePacked("\x19Ethereum Signed Message:\n32", hash)
-        );
-        return ECDSA.recover(messageDigest, signature);
-    }
 
     /**
      * @dev The Github repo owner should sign an off-chain
@@ -112,33 +99,17 @@ contract POGMRegistry is AccessControl {
         );
     }
 
-    /**
-     * @dev Retrieve the owner address of a tokenized repo
-     * @param _tokenizedRepoId tokenized repo id
-     * @return owner owner address of the tokenized repo or address 0 if repo does not exists
-     */
-    function getTokenizedRepoOwner(uint256 _tokenizedRepoId)
-        public
-        view
-        returns (address owner)
+    function _recoverSigner(bytes32 hash, bytes memory signature)
+        private
+        pure
+        returns (address)
     {
-        if (database[_tokenizedRepoId].githubRepoId != 0)
-            return database[_tokenizedRepoId].operators[REPOSITORY_OWNER];
-        else return address(0);
+        bytes32 messageDigest = keccak256(
+            abi.encodePacked("\x19Ethereum Signed Message:\n32", hash)
+        );
+        return ECDSA.recover(messageDigest, signature);
     }
 
-    /**
-     * @dev This function is called by the Factory when a a new POGM contract is created to populate the _soulboundContract param for the tokenized repo
-     * @param _repoId tokenized repo id
-     * @param _soulboundContract POGM contract address
-     */
-    function setSoulboundAfterCreation(
-        uint256 _repoId,
-        address _soulboundContract
-    ) external onlyRole(NFT_FACTORY_ROLE) {
-        database[_repoId].soulBoundTokenContract = _soulboundContract;
-        emit SoulboundCreated(_repoId, _soulboundContract);
-    }
 
     /**
      * @dev This function can be called by the BLACKLIST_ADMINISTRATOR to blacklist new wallet addresses
@@ -184,6 +155,14 @@ contract POGMRegistry is AccessControl {
         onlyIfRepoExists(_githubRepoId)
         onlyRepositoryRole(_githubRepoId, REQUIREMENTS_ADMINISTRATOR)
     {
+         if (
+            _collections.length == 0 ||
+            _collections.length != _ids.length ||
+            _collections.length != _amounts.length
+        )
+            revert GeneralError(
+                "Wrong length."
+            );
         database[_githubRepoId].collections = _collections;
         database[_githubRepoId].ids = _ids;
         database[_githubRepoId].amounts = _amounts;
@@ -242,29 +221,31 @@ contract POGMRegistry is AccessControl {
     }
 
     /**
-     * @dev This function can be called to check if a wallet address respects the tokenized repo requirements
+     * @dev This function can be by an operator to transfer its role to a new operator
      * @param _githubRepoId Tokenized repo id
      * @param _op Operator to change
      * @param _newValue New operator address
      * @return oldValue Old operator address
      */
-    function setOperator(
+    function transferRole(
         uint256 _githubRepoId,
         uint256 _op,
         address _newValue
     ) external onlyIfRepoExists(_githubRepoId) returns (address oldValue) {
-        if (operator[_op] != _msgSender())
-            revert AccessDenied(_githubRepoId, _msgSender(), _op);
-        return _setOperator(_githubRepoId, _op, _newValue);
+        if (!(_op >= 0 && _op < 3)) revert GeneralError("invalid op");
+
+        if (database[_githubRepoId].operators[_op] != msg.sender)
+            revert AccessDenied(_githubRepoId, msg.sender, _op);
+
+        return _transferRole(_githubRepoId, _op, _newValue);
     }
 
     // private function internally used by setOperator
-    function _setOperator(
+    function _transferRole(
         uint256 _githubRepoId,
         uint256 _op,
         address _newValue
     ) private returns (address oldValue) {
-        if (!(_op > 0 && _op < 3)) revert GeneralError("invalid op");
         oldValue = database[_githubRepoId].operators[_op];
         database[_githubRepoId].operators[_op] = _newValue;
         emit RoleChanged(_githubRepoId, _newValue, _op);
@@ -279,6 +260,19 @@ contract POGMRegistry is AccessControl {
         onlyRole(DEFAULT_ADMIN_ROLE)
     {
         _grantRole(NFT_FACTORY_ROLE, _factory);
+    }
+
+    /**
+     * @dev This function is called by the Factory when a a new POGM contract is created to populate the _soulboundContract param for the tokenized repo
+     * @param _repoId tokenized repo id
+     * @param _soulboundContract POGM contract address
+     */
+    function setSoulboundAfterCreation(
+        uint256 _repoId,
+        address _soulboundContract
+    ) external onlyRole(NFT_FACTORY_ROLE) {
+        database[_repoId].soulBoundTokenContract = _soulboundContract;
+        emit SoulboundCreated(_repoId, _soulboundContract);
     }
 
     /**
@@ -318,5 +312,20 @@ contract POGMRegistry is AccessControl {
         returns (address[] memory)
     {
         return database[repoId].blacklistedAddresses;
+    }
+
+    /**
+     * @dev Retrieve the owner address of a tokenized repo
+     * @param _tokenizedRepoId tokenized repo id
+     * @return owner owner address of the tokenized repo or address 0 if repo does not exists
+     */
+    function getTokenizedRepoOwner(uint256 _tokenizedRepoId)
+        public
+        view
+        returns (address owner)
+    {
+        if (database[_tokenizedRepoId].githubRepoId != 0)
+            return database[_tokenizedRepoId].operators[REPOSITORY_OWNER];
+        else return address(0);
     }
 }
