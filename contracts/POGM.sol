@@ -47,7 +47,7 @@ contract POGMToken is ERC721, Ownable, EIP712, ERC721Votes, ERC721Burnable {
    * @param _uri The uri of the POGM contract shared by all POGM ids of this contract
    */
     constructor(string memory repoName, uint256 _tokenizedRepoId, address _POGMRegistry, string memory _uri) 
-    ERC721(POGMName = string(abi.encodePacked("ProofOfGithubMembership",repoName)), "POGM") EIP712(POGMName, "1") 
+    ERC721(POGMName = string(abi.encodePacked("ProofOfGithubMembership_",repoName)), "POGM") EIP712(POGMName, "1") 
     {
         tokenizedRepoId = _tokenizedRepoId;
         POGMRegistryAddress = _POGMRegistry;
@@ -117,8 +117,9 @@ contract POGMToken is ERC721, Ownable, EIP712, ERC721Votes, ERC721Burnable {
         return true;
     }
 
-    // The following function is an override in order to return the same baseUri string for all POGM ids of this contract
-    function _baseURI() internal view override returns (string memory) {
+    // ovverride tokenUri to return the same image for all POGM ids 
+    function tokenURI(uint256 tokenId) public view virtual override returns (string memory) {
+        require(_exists(tokenId), "ERC721Metadata: URI query for nonexistent token");
         return baseUri;
     }
 }
