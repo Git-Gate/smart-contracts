@@ -158,9 +158,11 @@ contract POGMRegistry is AccessControl {
             uint256 _tokenId = POGMToken(
                 database[_githubRepoId].soulBoundTokenContract
             ).POGMHolders(_addresses[i]);
-            POGMToken(database[_githubRepoId].soulBoundTokenContract).burn(
-                _tokenId
-            );
+            if (_tokenId > 0) {
+                POGMToken(database[_githubRepoId].soulBoundTokenContract).burn(
+                    _tokenId
+                );
+            }
             emit BlacklistedAddressCreated(_addresses[i]);
         }
     }
@@ -303,5 +305,18 @@ contract POGMRegistry is AccessControl {
         returns (string memory)
     {
         return database[repoId].soulboundBaseURI;
+    }
+
+    /**
+     * @dev This function can be used to retrieve the tokenized repo name
+     * @param repoId Tokenized repo id
+     */
+    function getBlacklistedAddresses(uint256 repoId)
+        public
+        view
+        onlyIfRepoExists(repoId)
+        returns (address[] memory)
+    {
+        return database[repoId].blacklistedAddresses;
     }
 }
