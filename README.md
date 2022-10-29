@@ -1,13 +1,24 @@
-# Sample Hardhat Project
+# GitGate Smart Contracts - Hardhat Project
 
-This project demonstrates a basic Hardhat use case. It comes with a sample contract, a test for that contract, and a script that deploys that contract.
+## How to run this project
 
-Try running some of the following tasks:
+```console
+foo@bar:~$ git clone https://github.com/Git-Gate/smart-contracts
+foo@bar:~$ cd smart-contracts
+foo@bar:~$ npm i
+```
 
-```shell
-npx hardhat help
-npx hardhat test
-GAS_REPORT=true npx hardhat test
-npx hardhat node
-npx hardhat run scripts/deploy.js
+Create the .env file and insert the following variables:
+- ALCHEMY_URL
+- PRIVATE_KEY
+- PRIVATE_KEY2
+
+To deploy the smart contracts on the local hardhat network run:
+```console
+foo@bar:~$ npx hardhat run scripts/deploy.js --network hardhat
+```
+
+To deploy the smart contracts on the Mumbai Polygon network run:
+```console
+foo@bar:~$ npx hardhat run scripts/deploy.js --network mumbai
 ```
