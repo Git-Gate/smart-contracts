@@ -25,7 +25,7 @@ Create the .env file and insert the following variables:
 
 The Alchemy HTTP url can be retrieved from your app on https://alchemy.com
 
-To export private key of you metamask account follow this guide: https://metamask.zendesk.com/hc/en-us/articles/360015289632-How-to-export-an-account-s-private-key
+To export private key of your metamask wallet follow this guide: https://metamask.zendesk.com/hc/en-us/articles/360015289632-How-to-export-an-account-s-private-key
 
 ### Deploy contracts
 
@@ -35,7 +35,7 @@ To deploy the smart contracts on the local hardhat network run:
 foo@bar:~$ npx hardhat run scripts/deploy.js --network hardhat
 ```
 
-To deploy the smart contracts on the Mumbai Polygon network run:
+To deploy the smart contracts on the Mumbai Polygon network run (make sure you have some [testnet MATIC](https://faucet.polygon.technology/) on your wallet):
 
 ```console
 foo@bar:~$ npx hardhat run scripts/deploy.js --network mumbai
