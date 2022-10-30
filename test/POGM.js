@@ -286,8 +286,6 @@ describe("POGM", function () {
     );
     await tx.wait();
 
-    console.log(await registry.getRequirements(repoID));
-
     tx = await registry.checkUserRequirements(repoID, user_has_access);
     expect(tx).to.be.true;
     tx = await registry.checkUserRequirements(repoID, user_has_not_access);
@@ -323,9 +321,9 @@ describe("POGM", function () {
       user_has_access
     );
 
-    tx = await registry
-      .connect(impersonatedSigner)
-      .setBlacklistedAddress([accountBlacklisted.address], repoID);
+    // tx = await registry
+    //   .connect(impersonatedSigner)
+    //   .setBlacklistedAddress([accountBlacklisted.address], repoID);
 
     await pogm.connect(userWithAccess).safeMint(userWithAccess.address);
     console.log("minted");
