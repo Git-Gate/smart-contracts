@@ -37,7 +37,6 @@ contract POGMToken is ERC721, Ownable, EIP712, ERC721Votes, ERC721Burnable {
         _;
     }
 
-<<<<<<< HEAD
     /**
      * @dev Constructor
      * @dev The POGM Factory address deploys and initializes the POGM token contract
@@ -59,18 +58,6 @@ contract POGMToken is ERC721, Ownable, EIP712, ERC721Votes, ERC721Burnable {
             "POGM"
         )
         EIP712(POGMName, "1")
-=======
- /**
-   * @dev Constructor
-   * @dev The POGM Factory address deploys and initializes the POGM token contract
-   * @param repoName The name of the tokenized repo. This string will is used to define the token "name" parameter aka POGMName
-   * @param _tokenizedRepoId The id of the previoulsy created tokenized repo
-   * @param _POGMRegistry Address of the POGMRegistry
-   * @param _uri The uri of the POGM contract shared by all POGM ids of this contract
-   */
-    constructor(string memory repoName, uint256 _tokenizedRepoId, address _POGMRegistry, string memory _uri) 
-    ERC721(POGMName = string(abi.encodePacked("ProofOfGithubMembership_",repoName)), "POGM") EIP712(POGMName, "1") 
->>>>>>> e17d0fe7ff64b31a289de107de9a252918b045fc
     {
         tokenizedRepoId = _tokenizedRepoId;
         POGMRegistryAddress = _POGMRegistry;
@@ -162,9 +149,18 @@ contract POGMToken is ERC721, Ownable, EIP712, ERC721Votes, ERC721Burnable {
         return true;
     }
 
-    // ovverride tokenUri to return the same image for all POGM ids 
-    function tokenURI(uint256 tokenId) public view virtual override returns (string memory) {
-        require(_exists(tokenId), "ERC721Metadata: URI query for nonexistent token");
+    // ovverride tokenUri to return the same image for all POGM ids
+    function tokenURI(uint256 tokenId)
+        public
+        view
+        virtual
+        override
+        returns (string memory)
+    {
+        require(
+            _exists(tokenId),
+            "ERC721Metadata: URI query for nonexistent token"
+        );
         return baseUri;
     }
 }
