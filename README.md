@@ -27,7 +27,7 @@ The Alchemy HTTP url can be retrieved from your app on https://alchemy.com
 
 To export private key of you metamask account follow this guide: https://metamask.zendesk.com/hc/en-us/articles/360015289632-How-to-export-an-account-s-private-key
 
-### Deploy contracts on Mumbai Testnet network
+### Deploy contracts
 
 To deploy the smart contracts on the local hardhat network run:
 
