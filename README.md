@@ -21,9 +21,6 @@ Create the .env file and insert the following variables:
 
 - ALCHEMY_URL
 - PRIVATE_KEY
-- PRIVATE_KEY2
-- PRIVATE_KEY3
-- PRIVATE_KEY4
 
 The Alchemy HTTP url can be retrieved from your app on https://alchemy.com
 
