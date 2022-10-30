@@ -62,7 +62,6 @@ contract POGMRegistry is AccessControl {
         _grantRole(DEFAULT_ADMIN_ROLE, msg.sender);
     }
 
-
     /**
      * @dev The Github repo owner should sign an off-chain
      * @dev The GitGate Admin wallet calls this method to create a tokenized repo
@@ -110,7 +109,6 @@ contract POGMRegistry is AccessControl {
         return ECDSA.recover(messageDigest, signature);
     }
 
-
     /**
      * @dev This function can be called by the BLACKLIST_ADMINISTRATOR to blacklist new wallet addresses
      * @param _addresses Addresses to blacklist
@@ -155,14 +153,11 @@ contract POGMRegistry is AccessControl {
         onlyIfRepoExists(_githubRepoId)
         onlyRepositoryRole(_githubRepoId, REQUIREMENTS_ADMINISTRATOR)
     {
-         if (
+        if (
             _collections.length == 0 ||
             _collections.length != _ids.length ||
             _collections.length != _amounts.length
-        )
-            revert GeneralError(
-                "Wrong length."
-            );
+        ) revert GeneralError("Wrong length.");
         database[_githubRepoId].collections = _collections;
         database[_githubRepoId].ids = _ids;
         database[_githubRepoId].amounts = _amounts;
@@ -327,5 +322,19 @@ contract POGMRegistry is AccessControl {
         if (database[_tokenizedRepoId].githubRepoId != 0)
             return database[_tokenizedRepoId].operators[REPOSITORY_OWNER];
         else return address(0);
+    }
+
+    /**
+     * @dev Retrieve the owner address of a tokenized repo
+     * @param repoId tokenized repo id
+     * @return RepositoryRequirements
+     */
+    function getRequirements(uint256 repoId)
+        public
+        view
+        onlyIfRepoExists(repoId)
+        returns (RepositoryRequirements memory)
+    {
+        return database[repoId];
     }
 }

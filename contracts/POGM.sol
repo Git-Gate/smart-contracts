@@ -79,13 +79,13 @@ contract POGMToken is ERC721, Ownable, EIP712, ERC721Votes, ERC721Burnable {
 
         POGMRegistry instanceRegistry = POGMRegistry(POGMRegistryAddress);
 
-        address[] memory addresses = instanceRegistry.getBlacklistedAddresses(
+        address[] memory blacklisted = instanceRegistry.getBlacklistedAddresses(
             tokenizedRepoId
         );
 
-        bool blacklisted = _checkIfAddressIsBlacklisted(receiver, addresses);
+        bool authorized = _checkBlacklist(receiver, blacklisted);
 
-        if (blacklisted) revert Address_Blacklisted();
+        if (!authorized) revert Address_Blacklisted();
 
         if (!instanceRegistry.checkUserRequirements(tokenizedRepoId, receiver))
             revert Missing_Requirements();
@@ -137,13 +137,12 @@ contract POGMToken is ERC721, Ownable, EIP712, ERC721Votes, ERC721Burnable {
     }
 
     // The following function is used to check if an address had been blacklisted on the POGM Registry
-    function _checkIfAddressIsBlacklisted(
+    function _checkBlacklist(
         address addressReceiver,
-        address[] memory addresses
-    ) internal pure returns (bool blacklisted) {
-        if (addresses.length == 0) return false;
-        for (uint256 i = 0; i < addresses.length; i++) {
-            if (addressReceiver == addresses[i]) {
+        address[] memory blacklisted
+    ) internal pure returns (bool auth) {
+        for (uint256 i = 0; i < blacklisted.length; i++) {
+            if (addressReceiver == blacklisted[i]) {
                 return false;
             }
         }

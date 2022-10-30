@@ -259,7 +259,7 @@ describe("POGM", function () {
         impersonatedSigner.address,
       ],
       op: [0, 1, 2],
-      blacklistedAddresses: ["0x5a673baD16A959502582bAdb8AAB4E93317FBBc0"],
+      blacklistedAddresses: [],
       collections: [
         "0x0000000000000000000000000000000000000000",
         erc721Contract,
@@ -285,6 +285,8 @@ describe("POGM", function () {
       signature
     );
     await tx.wait();
+
+    console.log(await registry.getRequirements(repoID));
 
     tx = await registry.checkUserRequirements(repoID, user_has_access);
     expect(tx).to.be.true;
@@ -317,6 +319,14 @@ describe("POGM", function () {
     await helpers.setBalance(userWithAccess.address, 100n ** 18n);
     await helpers.setBalance(userWithoutAccess.address, 100n ** 18n);
 
+    const accountBlacklisted = await ethers.getImpersonatedSigner(
+      user_has_access
+    );
+
+    tx = await registry
+      .connect(impersonatedSigner)
+      .setBlacklistedAddress([accountBlacklisted.address], repoID);
+
     await pogm.connect(userWithAccess).safeMint(userWithAccess.address);
     console.log("minted");
 
@@ -328,10 +338,5 @@ describe("POGM", function () {
         "Error minting for user with no access: " + userWithoutAccess.address
       );
     }
-
-    const accountBlacklisted = await helpers.impersonateAccount(
-      "0x722c27A7353C24d514821ECF3CeC3747aF159A31"
-    );
-    console.log(accountBlacklisted);
   });
 });
