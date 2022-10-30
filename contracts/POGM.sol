@@ -12,7 +12,6 @@ import "./POGMRegistry.sol";
 /// @author   GitGate - developed by @francescocirulli
 
 contract POGMToken is ERC721, Ownable, EIP712, ERC721Votes, ERC721Burnable {
-    
     // defines the POGM token "name" parameter
     string public POGMName;
     // address of the POGMRegistry. POGMRegistry tracks all the tokenized repos and their requirements
@@ -38,16 +37,27 @@ contract POGMToken is ERC721, Ownable, EIP712, ERC721Votes, ERC721Burnable {
         _;
     }
 
- /**
-   * @dev Constructor
-   * @dev The POGM Factory address deploys and initializes the POGM token contract
-   * @param repoName The name of the tokenized repo. This string will is used to define the token "name" parameter aka POGMName
-   * @param _tokenizedRepoId The id of the previoulsy created tokenized repo
-   * @param _POGMRegistry Address of the POGMRegistry
-   * @param _uri The uri of the POGM contract shared by all POGM ids of this contract
-   */
-    constructor(string memory repoName, uint256 _tokenizedRepoId, address _POGMRegistry, string memory _uri) 
-    ERC721(POGMName = string(abi.encodePacked("ProofOfGithubMembership",repoName)), "POGM") EIP712(POGMName, "1") 
+    /**
+     * @dev Constructor
+     * @dev The POGM Factory address deploys and initializes the POGM token contract
+     * @param repoName The name of the tokenized repo. This string will is used to define the token "name" parameter aka POGMName
+     * @param _tokenizedRepoId The id of the previoulsy created tokenized repo
+     * @param _POGMRegistry Address of the POGMRegistry
+     * @param _uri The uri of the POGM contract shared by all POGM ids of this contract
+     */
+    constructor(
+        string memory repoName,
+        uint256 _tokenizedRepoId,
+        address _POGMRegistry,
+        string memory _uri
+    )
+        ERC721(
+            POGMName = string(
+                abi.encodePacked("ProofOfGithubMembership_", repoName)
+            ),
+            "POGM"
+        )
+        EIP712(POGMName, "1")
     {
         tokenizedRepoId = _tokenizedRepoId;
         POGMRegistryAddress = _POGMRegistry;
@@ -55,27 +65,31 @@ contract POGMToken is ERC721, Ownable, EIP712, ERC721Votes, ERC721Burnable {
         _tokenIdCounter.increment();
     }
 
- /**
-   * @dev This function can be used by an address to mint its POGM soulbound token
-   * @dev It must respect the tokenized repo requirements defined in the POGMRegistry
-   * @dev An holder can't have more than one POGM
-   * @param _receiver The address receiver of the POGM token
-   */
+    /**
+     * @dev This function can be used by an address to mint its POGM soulbound token
+     * @dev It must respect the tokenized repo requirements defined in the POGMRegistry
+     * @dev An holder can't have more than one POGM
+     * @param _receiver The address receiver of the POGM token
+     */
     function safeMint(address _receiver) public {
         address receiver = _receiver != address(0) ? _receiver : msg.sender;
 
-        if (POGMHolders[receiver] != 0) revert Already_Has_POGM(POGMHolders[receiver]);
+        if (POGMHolders[receiver] != 0)
+            revert Already_Has_POGM(POGMHolders[receiver]);
 
         POGMRegistry instanceRegistry = POGMRegistry(POGMRegistryAddress);
 
-        address[] memory blacklisted = instanceRegistry.getBlacklistedAddresses(tokenizedRepoId);
+        address[] memory addresses = instanceRegistry.getBlacklistedAddresses(
+            tokenizedRepoId
+        );
 
-        (bool authorized) = _checkBlacklist(receiver, blacklisted);
+        bool blacklisted = _checkIfAddressIsBlacklisted(receiver, addresses);
 
-        if (!authorized) revert Address_Blacklisted();
+        if (blacklisted) revert Address_Blacklisted();
 
-        if (!instanceRegistry.checkUserRequirements(tokenizedRepoId, receiver)) revert Missing_Requirements();
-    
+        if (!instanceRegistry.checkUserRequirements(tokenizedRepoId, receiver))
+            revert Missing_Requirements();
+
         uint256 tokenId = _tokenIdCounter.current();
         _tokenIdCounter.increment();
         _safeMint(receiver, tokenId);
@@ -83,36 +97,55 @@ contract POGMToken is ERC721, Ownable, EIP712, ERC721Votes, ERC721Burnable {
         POGMHolders[receiver] = tokenId;
     }
 
- /**
-   * @dev This fuction is an override of the standard OpenZeppelin burn function to let the POGMRegistry address burning POGM ids held by blacklisted addresses
-   * @dev The burn methdod can be called by the POGM id owner, an approved operator address or the POGMRegistry address
-   * @param tokenId The POGM id to burn
-   */
+    /**
+     * @dev This fuction is an override of the standard OpenZeppelin burn function to let the POGMRegistry address burning POGM ids held by blacklisted addresses
+     * @dev The burn methdod can be called by the POGM id owner, an approved operator address or the POGMRegistry address
+     * @param tokenId The POGM id to burn
+     */
     function burn(uint256 tokenId) public override {
-        require(_isApprovedOrOwner(msg.sender, tokenId) || msg.sender == POGMRegistryAddress, "ERC721: caller is not token owner or approved");
-        
+        require(
+            _isApprovedOrOwner(msg.sender, tokenId) ||
+                msg.sender == POGMRegistryAddress,
+            "ERC721: caller is not token owner or approved"
+        );
+
         address owner = ownerOf(tokenId);
         _burn(tokenId);
         delete POGMHolders[owner];
     }
 
     // The following function is an override required by Solidity
-    function _afterTokenTransfer(address from, address to, uint256 tokenId) internal override(ERC721, ERC721Votes) {
+    function _afterTokenTransfer(
+        address from,
+        address to,
+        uint256 tokenId
+    ) internal override(ERC721, ERC721Votes) {
         super._afterTokenTransfer(from, to, tokenId);
     }
 
     // The following function is an override in order to make the POGM token an actual soulbound. Only transfers from and to address(0) are allowed
-    function _beforeTokenTransfer(address from, address to, uint256 tokenId) internal override(ERC721) {
-      require(from == address(0) || to == address(0), "this token is a soulbound");
-      super._beforeTokenTransfer(from, to, tokenId);
-   }
+    function _beforeTokenTransfer(
+        address from,
+        address to,
+        uint256 tokenId
+    ) internal override(ERC721) {
+        require(
+            from == address(0) || to == address(0),
+            "this token is a soulbound"
+        );
+        super._beforeTokenTransfer(from, to, tokenId);
+    }
 
-   // The following function is used to check if an address had been blacklisted on the POGM Registry
-   function _checkBlacklist(address addressReceiver, address[] memory blacklisted) internal pure returns (bool auth) {    
-        for (uint256 i = 0; i < blacklisted.length; i++) {
-            if (addressReceiver == blacklisted[i]) {
+    // The following function is used to check if an address had been blacklisted on the POGM Registry
+    function _checkIfAddressIsBlacklisted(
+        address addressReceiver,
+        address[] memory addresses
+    ) internal pure returns (bool blacklisted) {
+        if (addresses.length == 0) return false;
+        for (uint256 i = 0; i < addresses.length; i++) {
+            if (addressReceiver == addresses[i]) {
                 return false;
-            }   
+            }
         }
         return true;
     }
