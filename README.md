@@ -7,17 +7,27 @@
 
 ## How to run this project
 
+### Initialize the project
+
 ```console
 foo@bar:~$ git clone https://github.com/Git-Gate/smart-contracts
 foo@bar:~$ cd smart-contracts
 foo@bar:~$ npm i
 ```
 
+### Set environment variables
+
 Create the .env file and insert the following variables:
 
 - ALCHEMY_URL
 - PRIVATE_KEY
 - PRIVATE_KEY2
+
+The Alchemy HTTP url can be retrieved from your app on https://alchemy.com
+
+To export private key of you metamask account follow this guide: https://metamask.zendesk.com/hc/en-us/articles/360015289632-How-to-export-an-account-s-private-key
+
+### Deploy contracts on Mumbai Testnet network
 
 To deploy the smart contracts on the local hardhat network run:
 
